@@ -1,14 +1,21 @@
 import {Injectable, OnInit} from '@angular/core';
 import {AuthResponse} from "../model/oauth/auth-response";
-import {Router} from "@angular/router";
+import {AuthProvider} from "../model/oauth/auth-provider";
+import {IAuthResponse} from "../model/oauth/iauth-response";
 
 @Injectable()
-export class GoogleOauth2Service implements OnInit {
+export class GoogleOauth2Service implements OnInit, AuthProvider {
 
     static GOOGLEAUTH;
     static AUTH_RESPONSE;
 
-    constructor(private router: Router) {
+    constructor() {
+        this.gapiInit('');
+    }
+
+    gapiInit(redirect: string) {
+        redirect = 'http://localhost:4200/' + redirect;
+        redirect = redirect.trim();
         gapi.load('auth2', function () {
             GoogleOauth2Service.GOOGLEAUTH = gapi.auth2.init({
                 client_id: '724422975832-jku02idmv3eh8jl0954fmenfhdacgotb.apps.googleusercontent.com',
@@ -16,32 +23,32 @@ export class GoogleOauth2Service implements OnInit {
                 scope: 'openid profile email',
                 // ux_mode: 'popup',
                 ux_mode: 'redirect',
-                redirect_uri: 'http://localhost:4200/',
+                redirect_uri: redirect,
                 // prompt: 'consent'
                 prompt: 'none'
             })
-            .then((googleAuth) => {
-                    // const googleUser = googleAuth.currentUser.get();
-                    // GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse(true);
-                    GoogleOauth2Service.GOOGLEAUTH = googleAuth;
-                    if (googleAuth.isSignedIn && googleAuth.isSignedIn.get()) {
-                        const googleUser = GoogleOauth2Service.GOOGLEAUTH.currentUser.get();
-                        GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse(true);
-                        if (GoogleOauth2Service.AUTH_RESPONSE != null) {
-                            console.log(' Already Log In');
+                .then((googleAuth) => {
+                        // const googleUser = googleAuth.currentUser.get();
+                        // GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse(true);
+                        GoogleOauth2Service.GOOGLEAUTH = googleAuth;
+                        if (googleAuth.isSignedIn && googleAuth.isSignedIn.get()) {
+                            const googleUser = GoogleOauth2Service.GOOGLEAUTH.currentUser.get();
+                            GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse(true);
+                            // if (GoogleOauth2Service.AUTH_RESPONSE != null) {
+                            //     console.log(' Already Log In');
+                            // }
+                            // console.log(' This is strange, not logIn but come here');
+                        } else {
+                            // console.log(' Need to logIn');
                         }
-                        console.log(' This is strange, not login but come here');
-                    } else {
-                        console.log(' Need to login');
-                    }
-                },
-                () => {
-                    console.log(' Not login yet');
-                    // this.router.navigateByUrl('login');
-                });
+                    },
+                    // () => {
+                    //     console.log(' Not logIn yet');
+                    //     // this.router.navigateByUrl('logIn');
+                    // }
+                );
         });
     }
-
 
     /**
      * @external link
@@ -58,23 +65,24 @@ export class GoogleOauth2Service implements OnInit {
      * Get Google AuthResponse Object
      * @returns {AuthResponse}
      */
-    get authResponse(): AuthResponse {
 
+    getAuthResponse(): IAuthResponse {
         if (this.isAuthenticated()) {
-            return GoogleOauth2Service.AUTH_RESPONSE;
+            const authResponse = GoogleOauth2Service.AUTH_RESPONSE;
+            return new AuthResponse(authResponse.access_token, authResponse.expires_at, 0 );
         }
         return null;
     }
 
-    getGoogleUser() {
+    getUserProfile() {
         if (GoogleOauth2Service.GOOGLEAUTH) {
             if (GoogleOauth2Service.GOOGLEAUTH.isSignedIn && GoogleOauth2Service.GOOGLEAUTH.isSignedIn.get()) {
-                return GoogleOauth2Service.GOOGLEAUTH.currentUser.get();
+                return GoogleOauth2Service.GOOGLEAUTH.currentUser.get().getBasicProfile();
                 // GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse(true);
                 // if (GoogleOauth2Service.AUTH_RESPONSE != null) {
                 //     console.log(' Already Log In');
                 // }
-                // console.log(' This is strange, not login but come here');
+                // console.log(' This is strange, not logIn but come here');
             }
         }
         return null;
@@ -85,8 +93,7 @@ export class GoogleOauth2Service implements OnInit {
         /**
          * Check if GoogleOauth2Service.AUTH_RESPONSE is null or it already expired
          */
-        console.log('isAuthenticated() => isSignedIn: ' + GoogleOauth2Service.GOOGLEAUTH);
-        if (GoogleOauth2Service.AUTH_RESPONSE == null || GoogleOauth2Service.AUTH_RESPONSE.expires_at < new Date().getUTCSeconds()) {
+        if (GoogleOauth2Service.AUTH_RESPONSE != null && GoogleOauth2Service.AUTH_RESPONSE.expires_at < new Date().getUTCSeconds()) {
 
             // if (gapi.auth2 != null) {
             // console.log('isSignedIn: ' + GoogleOauth2Service.GOOGLEAUTH.isSignedIn);
@@ -104,7 +111,6 @@ export class GoogleOauth2Service implements OnInit {
     }
 
     logIn() {
-        // this.initGAPI(redirectUrl);
 
         if (gapi.auth2 != null) {
             const googleAuth = gapi.auth2.getAuthInstance();
@@ -114,20 +120,18 @@ export class GoogleOauth2Service implements OnInit {
             options.setScope('profile').setScope('email');
             googleAuth.signIn(options).then(googleUser => {
                 GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse();
-                console.log(' Login completed');
             });
         }
     }
 
-    logOut(): Promise<any> {
+    logOut() {
         const googleAuth = gapi.auth2.getAuthInstance();
         GoogleOauth2Service.AUTH_RESPONSE = null;
         if (googleAuth != null) {
-            return googleAuth.signOut();
-        } else {
-            return null;
+            googleAuth.signOut();
         }
     }
+
 }
 
 declare const gapi: any;
