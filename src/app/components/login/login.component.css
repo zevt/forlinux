@@ -1,0 +1,79 @@
+@media (max-width: 768px) {
+    .nav-justified > li {
+        display: table-cell;
+        width: 1%;
+    }
+
+    .nav-justified > li > a {
+        border-bottom: 1px solid #ddd !important;
+        border-radius: 4px 4px 0 0 !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+.well {
+    background-color: #fff;
+}
+
+div, li > a {
+    border-radius: 0.2em;
+}
+
+li > a > span {
+    text-transform: uppercase;
+    font-family: 'Cormorant SC', serif;
+    font-size: 16px;
+    font-weight: bolder;
+    font-style: normal;
+
+}
+div.text-center>span{
+    font-family: serif;
+    font-size: medium;
+}
+
+div.col-sm-offset-2 {
+    background-color: #F4F4EF;
+}
+
+.login-panel {
+    /*box-shadow: 2px 2px 2px 2px;*/
+    box-shadow: 1px 1px 2px 1px lightgray;
+}
+
+span.google-icon {
+    /*background: url('./images/btn_google_light_normal_ios@2x.png') transparent 5px 50% no-repeat;*/
+    background: url('./images/icons8-Google-48.png') transparent 5px 50% no-repeat;
+    display: inline-block;
+    vertical-align: middle;
+    width: 60px;
+    height: 42px;
+    /*margin:0 0 0 -19px;*/
+}
+
+span.facebook-icon {
+    background: url('./images/icons8-Facebook-48.png') transparent 5px 50% no-repeat;
+    display: inline-block;
+    vertical-align: middle;
+    width: 60px;
+    height: 42px;
+    /*margin:0 0 0 -19px;*/
+}
+
+.login-button {
+    border-radius: 0.3em;
+    border-color: #BAC0C6;
+    border-width: thin;
+    background-size: 100%;
+    /*padding: 0em;*/
+    background: #fff;
+    width: 200px;
+    text-transform: capitalize;
+    margin: 10px 0 10px 0;
+    font-family: serif;
+    font-size: small;
+}
+.login-button:hover{
+    box-shadow: 1px 1px 2px 1px #D5D7D6;
+    background: #EFF4F0;
+}

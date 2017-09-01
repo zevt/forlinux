@@ -2,6 +2,7 @@ import {Injectable, OnInit} from '@angular/core';
 import {AuthResponse} from "../model/oauth/auth-response";
 import {AuthProvider} from "../model/oauth/auth-provider";
 import {IAuthResponse} from "../model/oauth/iauth-response";
+import {Router} from "@angular/router";
 
 @Injectable()
 export class GoogleOauth2Service implements OnInit, AuthProvider {
@@ -9,7 +10,7 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
     static GOOGLEAUTH;
     static AUTH_RESPONSE;
 
-    constructor() {
+    constructor(private router: Router) {
         this.gapiInit('');
     }
 
@@ -21,8 +22,8 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
                 client_id: '724422975832-jku02idmv3eh8jl0954fmenfhdacgotb.apps.googleusercontent.com',
                 // fetch_basic_profile: true,
                 scope: 'openid profile email',
-                // ux_mode: 'popup',
-                ux_mode: 'redirect',
+                ux_mode: 'popup',
+                // ux_mode: 'redirect',
                 redirect_uri: redirect,
                 // prompt: 'consent'
                 prompt: 'none'
@@ -69,7 +70,9 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
     getAuthResponse(): IAuthResponse {
         if (this.isAuthenticated()) {
             const authResponse = GoogleOauth2Service.AUTH_RESPONSE;
-            return new AuthResponse(authResponse.access_token, authResponse.expires_at, 0 );
+            console.log(authResponse);
+            return new AuthResponse(authResponse.id_token, Math.floor(authResponse.expires_at / 1000), 0);
+            // return new AuthResponse(authResponse.access_token, Math.floor(authResponse.expires_at / 1000), 0);
         }
         return null;
     }
@@ -93,7 +96,7 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
         /**
          * Check if GoogleOauth2Service.AUTH_RESPONSE is null or it already expired
          */
-        if (GoogleOauth2Service.AUTH_RESPONSE != null && GoogleOauth2Service.AUTH_RESPONSE.expires_at < new Date().getUTCSeconds()) {
+        if (GoogleOauth2Service.AUTH_RESPONSE != null && GoogleOauth2Service.AUTH_RESPONSE.expires_at < Date.now()) {
 
             // if (gapi.auth2 != null) {
             // console.log('isSignedIn: ' + GoogleOauth2Service.GOOGLEAUTH.isSignedIn);
@@ -107,10 +110,10 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
                 // console.log(' gapi.auth2 != null ');
             }
         }
-        return GoogleOauth2Service.AUTH_RESPONSE != null && GoogleOauth2Service.AUTH_RESPONSE.expires_at > new Date().getUTCSeconds();
+        return GoogleOauth2Service.AUTH_RESPONSE != null && GoogleOauth2Service.AUTH_RESPONSE.expires_at > Date.now();
     }
 
-    logIn() {
+    logIn(): Promise<any> {
 
         if (gapi.auth2 != null) {
             const googleAuth = gapi.auth2.getAuthInstance();
@@ -118,17 +121,26 @@ export class GoogleOauth2Service implements OnInit, AuthProvider {
             // options.setFetchBasicProfile(true);
             options.setPrompt('select_account');
             options.setScope('profile').setScope('email');
-            googleAuth.signIn(options).then(googleUser => {
-                GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse();
-            });
+            return googleAuth.signIn(options);
+        // .then(googleUser => {
+        //         GoogleOauth2Service.AUTH_RESPONSE = googleUser.getAuthResponse();
+        //     });
         }
     }
 
-    logOut() {
+    logOut(reRouteUrl: string) {
         const googleAuth = gapi.auth2.getAuthInstance();
         GoogleOauth2Service.AUTH_RESPONSE = null;
         if (googleAuth != null) {
-            googleAuth.signOut();
+            try {
+                googleAuth.signOut().then(() => {
+                    this.router.navigateByUrl(reRouteUrl).catch();
+                }).catch(error => {
+                    console.log(error);
+                });
+            } catch (error) {
+                console.log(error);
+            }
         }
     }
 
