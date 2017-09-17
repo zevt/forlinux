@@ -5,14 +5,12 @@ import {OAuthService} from "../services/oauth.service";
 import {Auth} from "../model/oauth/Auth";
 
 @Injectable()
-export class OauthResolver implements Resolve<Auth> {
+export class AuthResolver implements Resolve<Auth> {
 
     constructor(private oauthService: OAuthService) {
     }
 
     resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<Auth> | Promise<Auth> | Auth {
-
-        return null;
-        // return this.oauthService.isAuthenticated();
+        return this.oauthService.getAuth();
     }
 }
